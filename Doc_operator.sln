@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidateApp", "ValidateApp\ValidateApp.csproj", "{0130A829-1C2D-4C24-8D0C-249136E5BCFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docor", "Docor\Docor.csproj", "{7AEDC834-8D02-405A-82B1-29D6BC0E5150}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0130A829-1C2D-4C24-8D0C-249136E5BCFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0130A829-1C2D-4C24-8D0C-249136E5BCFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0130A829-1C2D-4C24-8D0C-249136E5BCFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0130A829-1C2D-4C24-8D0C-249136E5BCFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AEDC834-8D02-405A-82B1-29D6BC0E5150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AEDC834-8D02-405A-82B1-29D6BC0E5150}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AEDC834-8D02-405A-82B1-29D6BC0E5150}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AEDC834-8D02-405A-82B1-29D6BC0E5150}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A336016C-79E9-46DA-A5B2-F9EFAE57F3B1}
+	EndGlobalSection
+EndGlobal
