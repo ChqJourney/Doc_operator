@@ -46,11 +46,10 @@ namespace Docor
                         }
                     }
                 }
-
-               
-
-              
-            
+        }
+        public static void VerdictRow(MainDocumentPart mainPart,int rowIdx){
+            var documentBody=mainPart.Document.Body;
+            var rows=documentBody.Descendants<TableRow>().ToList();
         }
     }
 }
