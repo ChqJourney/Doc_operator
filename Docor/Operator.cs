@@ -47,6 +47,17 @@ namespace Docor
                     }
                 }
         }
+
+
+        public static void fillTextField(MainDocumentPart mainPart,int tableIdx,int rowIdx,int cellIdx,string text)
+        {
+            var documentBody = mainPart.Document.Body;
+            var table = documentBody?.Descendants<Table>().Take(new Range(tableIdx,tableIdx+1)).FirstOrDefault();
+            var row = table?.Descendants<TableRow>().Take(new Range(rowIdx,rowIdx+1)).FirstOrDefault();
+            var cell = row?.Descendants<TableCell>().Take(new Range(cellIdx,cellIdx+1)).FirstOrDefault();
+            var x = cell?.Descendants<DefaultTextBoxFormFieldString>().FirstOrDefault();
+            x.Val=text;
+        }
         public static void VerdictRow(MainDocumentPart mainPart,int rowIdx){
             var documentBody=mainPart.Document.Body;
             var rows=documentBody.Descendants<TableRow>().ToList();
