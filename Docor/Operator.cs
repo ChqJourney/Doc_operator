@@ -6,6 +6,20 @@ namespace Docor
 {
     public static class Operator
     {
+        public static bool CheckIfTableinTable(MainDocumentPart mainDocumentPart)
+        {
+            var tables = mainDocumentPart.Document.Body.Descendants<Table>().ToList();
+           
+            foreach (var table in tables)
+            {
+                if (table.Descendants<Table>().Any())
+                {
+
+                   return true;
+                }
+            }
+            return false;
+        }
         public static void ChangeCheckbox(MainDocumentPart mainPart,string bookmark,bool val)
         {
             BookmarkStart bookmarkStart = mainPart.Document.Body.Descendants<BookmarkStart>()
