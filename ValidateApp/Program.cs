@@ -25,9 +25,9 @@ namespace ValidateApp
                 var comments = mainPart.WordprocessingCommentsPart.Comments;
 
                 var tables = body.Descendants<Table>().ToList();
-                var row=tables[6].Descendants<TableRow>().ToList();
-                var cellsNo=row[84].Descendants<TableCell>().Count();
-                Console.WriteLine(cellsNo);
+              
+            var processor=new WordTableProcessor(tables[6]);
+            processor.Process();
                 // var ens = new List<CommentEntity>();
  
                 // for (int i = 0; i < tables.Count(); i++)
