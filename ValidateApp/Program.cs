@@ -25,37 +25,40 @@ namespace ValidateApp
                 var comments = mainPart.WordprocessingCommentsPart.Comments;
 
                 var tables = body.Descendants<Table>().ToList();
-                var ens = new List<CommentEntity>();
-
-                for (int i = 0; i < tables.Count(); i++)
-                {
-                    var rows = tables[i].Descendants<TableRow>().ToList();
-                    for (int j = 0; j < rows.Count(); j++)
-                    {
-                        var cells = rows[j].Descendants<TableCell>().ToList();
-                        for (int k = 0; k < cells.Count; k++)
-                        {
-                            var crs = cells[k].Descendants<CommentRangeStart>().FirstOrDefault();
-                            if (crs != null && ens.All(a => a.CommentId != crs.Id))
-                            {
-                                ens.Add(new CommentEntity { TableIdx = i, RowIdx = j, CellIdx = k, CommentId = crs.Id });
-                            }
-                        }
-                    }
-                }
+                var row=tables[6].Descendants<TableRow>().ToList();
+                var cellsNo=row[84].Descendants<TableCell>().Count();
+                Console.WriteLine(cellsNo);
+                // var ens = new List<CommentEntity>();
+ 
+                // for (int i = 0; i < tables.Count(); i++)
+                // {
+                //     var rows = tables[i].Descendants<TableRow>().ToList();
+                //     for (int j = 0; j < rows.Count(); j++)
+                //     {
+                //         var cells = rows[j].Descendants<TableCell>().ToList();
+                //         for (int k = 0; k < cells.Count; k++)
+                //         {
+                //             var crs = cells[k].Descendants<CommentRangeStart>().FirstOrDefault();
+                //             if (crs != null && ens.All(a => a.CommentId != crs.Id))
+                //             {
+                //                 ens.Add(new CommentEntity { TableIdx = i, RowIdx = j, CellIdx = k, CommentId = crs.Id });
+                //             }
+                //         }
+                //     }
+                // }
                
-                foreach (var en in ens)
-                {
-                    var dd = comments.ChildElements.Select(s => s as Comment).ToList();
-                    en.CommentText = dd.FirstOrDefault(f => f.Id == en.CommentId).InnerText;
-                    t.AddRow(en.TableIdx,en.RowIdx,en.CellIdx,en.CommentId,en.CommentText);
-                }
+                // foreach (var en in ens)
+                // {
+                //     var dd = comments.ChildElements.Select(s => s as Comment).ToList();
+                //     en.CommentText = dd.FirstOrDefault(f => f.Id == en.CommentId).InnerText;
+                //     t.AddRow(en.TableIdx,en.RowIdx,en.CellIdx,en.CommentId,en.CommentText);
+                // }
                 
                 //mainPart.Document.Save();
 
             }
-            t.Write();
-            Console.WriteLine("done");
+            // t.Write();
+            Console.ReadKey();
         }
     }
         internal class CommentEntity
