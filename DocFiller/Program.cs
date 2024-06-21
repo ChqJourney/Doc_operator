@@ -2,8 +2,9 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
+            await Task.Delay(500);
             Console.WriteLine("Hello, World!");
         }
     }

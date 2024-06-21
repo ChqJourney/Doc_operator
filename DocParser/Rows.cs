@@ -8,32 +8,107 @@ using System.Threading.Tasks;
 
 namespace DocParser
 {
-    public class TableRows
+    public class Rows
     {
-        public Task ParseRows(MainDocumentPart main,int fromTableIdx, int toTableIdx)
+        public Task<List<ReportRow>> ParseRows(MainDocumentPart main,int fromTableIdx, int toTableIdx)
         {
-            var tables=main.Document.Body.Descendants<Table>().Take(new Range(fromTableIdx, toTableIdx)).ToList();
+            var tables=main.Document.Body?.Descendants<Table>().Take(new Range(fromTableIdx, toTableIdx)).ToList();
+            if(tables==null || tables.Count == 0)
+            {
+                return Task.FromResult(new List<ReportRow>());
+            }
+            var resultList=new List<ReportRow>();
             foreach (var table in tables) 
             {
-                var rows=table.Descendants<ReportRow>().ToList();
+                var rows=table.Descendants<TableRow>().ToList();
+                foreach (var row in rows) 
+                {
+                    var rowType= DectectRowType(row); 
+                    var cells=row.Descendants<TableCell>().ToList();
+                    if (cells.Count == 3)
+                    {
 
-                var temp=new Table()
+                        resultList.Add(new ReportRow(rowType,cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText));
+                    }
+                    else
+                    {
+                        resultList.Add(new ReportRow(rowType,cells[0].InnerText, cells[1].InnerText, cells[2].InnerText,cells[3].InnerText));
+                    }
+                }
+                
             }
+            return Task.FromResult(resultList);
+        }
+        public RowType DectectRowType(TableRow row)
+        {
+            var cells=row.Descendants<TableCell>().ToList();
+            
+            if (cells.Count==3)
+            {
+                if (IsShadingCell(cells[1]))
+                {
+                    return RowType.SectionHeader;
+                }
+                return RowType.ClauseHeader;
+            }
+            else
+            {
+                if (IsShadingCell(cells[3]))
+                {
+                    if (IfRemarksNeeded(cells[1]))
+                    {
+                        return RowType.InfoItemWithRemark;
+                    }
+                    return RowType.InfoItem;
+                }
+                else
+                {
+                    if (IfRemarksNeeded(cells[1]))
+                    {
+                        return RowType.VerdictItemWithRemark;
+                    }
+                    return RowType.VerdictItem;
+                }
+            }
+            
+        }
+        private bool IfRemarksNeeded(TableCell cell)
+        {
+            if (cell.InnerText.Contains("...:"))
+            {
+                return true;
+            }
+            return false;
+        }
+        private bool IsShadingCell(TableCell cell,string shadingColor="D9D9D9")
+        {
+            var shading = cell.Descendants<Shading>().FirstOrDefault();
+            if (shading?.Val!=null&&shading.Val==shadingColor)
+            {
+                
+                    return true;
+               
+            }
+            return false;
         }
     }
     public class ReportRow
     {
-        public ReportRow(string a="",string b="",string c="",string d="")
+        public ReportRow(RowType rowType,string a="",string b="",string c="",string d="")
         {
             CellA = a;
             CellB = b;
             CellC = c;
             CellD = d;
+            RowType = rowType;
         }
+        public RowType RowType { get; set; }
         public string CellA { get; set; }
         public string CellB { get; set; }
         public string CellC { get; set; }
         public string CellD { get; set; }
+        public string Remark { get; set; }
+        public string Verdict { get; set; }
     }
    
     public enum RowType
@@ -41,6 +116,9 @@ namespace DocParser
         SectionHeader,
         ClauseHeader,
         VerdictItem,
-        InfoItem
+        VerdictItemWithRemark,
+        InfoItem,
+        InfoItemWithRemark,
+        Unknown
     }
 }
