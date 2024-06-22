@@ -4,13 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DocParser
 {
     public class Rows
     {
-        public Task<List<ReportRow>> ParseRows(MainDocumentPart main,int fromTableIdx, int toTableIdx)
+        public Task<List<ReportRow>> ParseRows(MainDocumentPart main,int fromTableIdx, int toTableIdx,Action<String> action=null)
         {
             var tables=main.Document.Body?.Descendants<Table>().Take(new Range(fromTableIdx, toTableIdx)).ToList();
             if(tables==null || tables.Count == 0)
@@ -25,14 +26,22 @@ namespace DocParser
                 {
                     var rowType= DectectRowType(row); 
                     var cells=row.Descendants<TableCell>().ToList();
+                    if (cells.Count == 1) continue;
                     if (cells.Count == 3)
                     {
-
-                        resultList.Add(new ReportRow(rowType,cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText));
+                        var tempRow = new ReportRow(rowType, cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText);
+                       
+                        resultList.Add(tempRow);
                     }
                     else
                     {
-                        resultList.Add(new ReportRow(rowType,cells[0].InnerText, cells[1].InnerText, cells[2].InnerText,cells[3].InnerText));
+                        var tempRow = new ReportRow(rowType, cells[0].InnerText, cells[1].InnerText, cells[2].InnerText, cells[3].InnerText);
+                        
+                        resultList.Add(tempRow);
+                    }
+                    if (action != null)
+                    {
+                        action.Invoke(JsonSerializer.Serialize(resultList.Last()));
                     }
                 }
                 

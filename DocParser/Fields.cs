@@ -5,16 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace DocParser
 {
     public class Fields
     {
-        public static Task<List<InputFiled>> CollectFields(MainDocumentPart main)
+        public Task<List<InputFiled>> CollectFields(MainDocumentPart main,Action<string> action=null)
         { 
             var comments = main.WordprocessingCommentsPart?.Comments.ChildElements.Select(s=>s as Comment).ToList();
-            if (comments == null || comments.Count == 0)
+            if (comments == null || comments?.Count == 0)
             {
                 return Task.FromResult(new List<InputFiled>());
             }
@@ -22,11 +24,17 @@ namespace DocParser
             foreach (var comment in comments)
             {
                 var temp = new InputFiled(comment.InnerText,comment.Id);
+                var json= JsonSerializer.Serialize(temp);
+                if(action != null)
+                {
+                    action.Invoke(json);
+                }
+
                 result.Add(temp);
             }
             return Task.FromResult(result);
         }
-        public static Task FillFields(MainDocumentPart main,List<InputFiled> fields)
+        public Task FillFields(MainDocumentPart main,List<InputFiled> fields)
         {
             var crs = main.Document.Body?.Descendants<CommentRangeStart>().ToList();
             foreach(var cr in crs)
