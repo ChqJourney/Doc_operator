@@ -55,21 +55,31 @@ namespace DocParser
             this.CommentId=commentId;
             this.CommentText=commentText;
             var arr = commentText.Split(':');
-            FieldType =(FieldType) Enum.Parse(typeof(FieldType), arr[0]);
+            // sample: Text:ReportNo:TextField
+            InputFieldType =(InputFieldType) Enum.Parse(typeof(InputFieldType), arr[0]);
             FieldName=arr[1];
         }
         public string FieldName { get; set; }
-        public FieldType  FieldType { get; set; }
+        public InputFieldType  InputFieldType { get; set; }
+        public OutPutFieldType OutPutType { get; set; }
         public string CommentId { get; set; }
         public string CommentText { get; set; }
         public string? FieldValue { get; set; }
     }
-    public enum FieldType
+    /// <summary>
+    /// user input value
+    /// </summary>
+    public enum InputFieldType
     {
         Text,
-        TextArea,
-        TextField,
-        CheckBox,
+        Boolean,
+        Picture,
         Unknown
+    }
+    public enum OutPutFieldType
+    {
+        Text,
+        TextboxField,
+        CheckBox,
     }
 }

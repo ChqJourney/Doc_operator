@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DocParser": {
+      "commandName": "Project",
+      "commandLineArgs": "verdicts"
+    }
+  }
+}

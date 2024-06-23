@@ -51,7 +51,7 @@ namespace DocParser
         public RowType DectectRowType(TableRow row)
         {
             var cells=row.Descendants<TableCell>().ToList();
-            
+            if(cells.Count==1)return RowType.Unknown;
             if (cells.Count==3)
             {
                 if (IsShadingCell(cells[1]))
