@@ -7,16 +7,23 @@ namespace DocParser
     {
         static async Task Main(string[] args)
         {
-            if (args.Length == 0) return;
-            
+            if (args.Length < 2) return;
+#if DEBUG   
             string templatePath = "Templates/iec60598_2_1i_2022-08-26.docx";
-          
+#else
+            string templatePath = args[0];
+            
+            foreach (string arg in args) 
+            {
+                Console.WriteLine(arg);
+            }
+#endif
             var fieldsParser = new Fields();
             var rows = new Rows();
             using (WordprocessingDocument doc = WordprocessingDocument.Open(templatePath, true))
             {
                 if (doc.MainDocumentPart == null) throw new NullReferenceException("maindocumentpart of doc is null");
-                switch (args[0])
+                switch (args[1])
                 {
                     case "fields":
                         //fields collect
