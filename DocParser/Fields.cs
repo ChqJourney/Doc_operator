@@ -33,6 +33,7 @@ namespace DocParser
 
                 result.Add(temp);
             }
+            //Console.Clear();
             return Task.FromResult(result);
         }
         public Task FillFields(MainDocumentPart main,List<InputFiled> fields)

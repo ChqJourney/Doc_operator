@@ -7,7 +7,6 @@ namespace DocParser
     {
         static async Task Main(string[] args)
         {
-            if (args.Length < 2) return;
 #if DEBUG   
             string templatePath = "Templates/iec60598_2_1i_2022-08-26.docx";
 #else
@@ -23,7 +22,11 @@ namespace DocParser
             using (WordprocessingDocument doc = WordprocessingDocument.Open(templatePath, true))
             {
                 if (doc.MainDocumentPart == null) throw new NullReferenceException("maindocumentpart of doc is null");
+#if DEBUG
+                switch(args[0])
+#else
                 switch (args[1])
+#endif
                 {
                     case "fields":
                         //fields collect
@@ -37,6 +40,9 @@ namespace DocParser
                         break;
                     case "Measurements":
                         break;
+                    case "Clear":
+                        Console.Clear();
+                        break;
                     default:
                         break;
 
@@ -44,6 +50,8 @@ namespace DocParser
                 
               
             }
+            Environment.Exit(0);
+            //Console.Clear();
         }
     }
 }
