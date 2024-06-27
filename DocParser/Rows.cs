@@ -22,21 +22,29 @@ namespace DocParser
             foreach (var table in tables) 
             {
                 var rows=table.Descendants<TableRow>().ToList();
+                var currentClause = "";
+                var i = 0;
                 foreach (var row in rows) 
                 {
                     var rowType= DectectRowType(row); 
                     var cells=row.Descendants<TableCell>().ToList();
                     if (cells.Count == 1) continue;
+                    if (!string.IsNullOrEmpty(cells[0].InnerText))
+                    {
+                        currentClause = cells[0].InnerText;
+                        i = 0;
+                    }
+                    
                     if (cells.Count == 3)
                     {
-                        var tempRow = new ReportRow(rowType, cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText);
-                       
+                        var tempRow = new ReportRow(rowType,currentClause,i, cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText);
+                        i++;
                         resultList.Add(tempRow);
                     }
                     else
                     {
-                        var tempRow = new ReportRow(rowType, cells[0].InnerText, cells[1].InnerText, cells[2].InnerText, cells[3].InnerText);
-                        
+                        var tempRow = new ReportRow(rowType, currentClause,i, cells[0].InnerText, cells[1].InnerText, cells[2].InnerText, cells[3].InnerText);
+                        i++;
                         resultList.Add(tempRow);
                     }
                     if (action != null)
@@ -64,18 +72,10 @@ namespace DocParser
             {
                 if (IsShadingCell(cells[3]))
                 {
-                    if (IfRemarksNeeded(cells[1]))
-                    {
-                        return RowType.InfoItemWithRemark;
-                    }
                     return RowType.InfoItem;
                 }
                 else
                 {
-                    if (IfRemarksNeeded(cells[1]))
-                    {
-                        return RowType.VerdictItemWithRemark;
-                    }
                     return RowType.VerdictItem;
                 }
             }
@@ -83,7 +83,7 @@ namespace DocParser
         }
         private bool IfRemarksNeeded(TableCell cell)
         {
-            if (cell.InnerText.Contains("...:"))
+            if (cell.InnerText.Contains("...:")||cell.InnerText.Contains("\u2026\u2026\u2026:"))
             {
                 return true;
             }
@@ -103,15 +103,19 @@ namespace DocParser
     }
     public class ReportRow
     {
-        public ReportRow(RowType rowType,string a="",string b="",string c="",string d="")
+        public ReportRow(RowType rowType,string clauseNo,int idx,string a="",string b="",string c="",string d="")
         {
             CellA = a;
             CellB = b;
             CellC = c;
             CellD = d;
             RowType = rowType;
+            ClauseNo = clauseNo;
+            IdxUnderClause = idx;
         }
         public RowType RowType { get; set; }
+        public string ClauseNo { get; set; }
+        public int IdxUnderClause { get; set; }
         public string CellA { get; set; }
         public string CellB { get; set; }
         public string CellC { get; set; }
@@ -125,9 +129,7 @@ namespace DocParser
         SectionHeader,
         ClauseHeader,
         VerdictItem,
-        VerdictItemWithRemark,
         InfoItem,
-        InfoItemWithRemark,
         Unknown
     }
 }
