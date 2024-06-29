@@ -34,7 +34,7 @@ namespace DocParser
                         break;
                     case "verdicts":
                         //report rows collect
-                        var reportRows = rows.ParseRows(doc.MainDocumentPart, 7, 9, action => Console.WriteLine(action));
+                        var reportRows = rows.ParseRows(doc.MainDocumentPart, 4, 9, action => Console.WriteLine(action));
                         break;
                     case "Components":
                         break;

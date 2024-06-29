@@ -37,13 +37,21 @@ namespace DocParser
                     
                     if (cells.Count == 3)
                     {
+                        
                         var tempRow = new ReportRow(rowType,currentClause,i, cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText);
                         i++;
                         resultList.Add(tempRow);
                     }
                     else
                     {
-                        var tempRow = new ReportRow(rowType, currentClause,i, cells[0].InnerText, cells[1].InnerText, cells[2].InnerText, cells[3].InnerText);
+                            string cellContent="";
+                        if (!string.IsNullOrEmpty(cells[2].InnerText))
+                        {
+                            var paras = cells[2].Descendants<Paragraph>().ToList();
+                            var texts=paras.Select(x=>x.InnerText).ToList();
+                            cellContent=string.Join('\n',texts);
+                        }
+                        var tempRow = new ReportRow(rowType, currentClause,i, cells[0].InnerText, cells[1].InnerText, cellContent, cells[3].InnerText);
                         i++;
                         resultList.Add(tempRow);
                     }
