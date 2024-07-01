@@ -9,8 +9,77 @@ using System.Threading.Tasks;
 
 namespace DocParser
 {
+    public class GeneralTable
+    {
+        public List<GeneralRow> Rows { get; set; } = new List<GeneralRow>();
+    }
+    public class GeneralRow
+    {
+        public List<GeneralCell> Cells { get; set; } = new List<GeneralCell>();
+    }
+    public class GeneralCell
+    {
+        public int RowIdx { get; set; }
+        public int ColumnIdx { get; set; }
+        public string CellTxt { get; set; }
+        public bool Bolded { get; set; }
+        public int CellWidth { get; set; }
+        public string HMerge { get; set; }
+        public string VMerge { get; set; }
+    }
     public class Rows
     {
+        public Task<GeneralTable> ParseGeneralRows(MainDocumentPart main, int tableIdx, Action<String> action = null)
+        {
+            var table = main.Document.Body?.Descendants<Table>().ElementAt(tableIdx-1);
+            if (table == null)throw new NullReferenceException(nameof(table));
+            var result = new GeneralTable();
+            var rows = table.Descendants<TableRow>().ToList();
+
+            var rowIdx = 0;
+            foreach (var row in rows)
+            {
+                var grow = new GeneralRow();
+                
+                var cells=row.Descendants<TableCell>().ToList();
+                var columnIdx = 0;
+                foreach (var cell in cells)
+                {
+                    var gc=new GeneralCell();
+                    gc.RowIdx = rowIdx;
+                    gc.ColumnIdx = columnIdx;
+                    string cellContent = "";
+                    if (!string.IsNullOrEmpty(cell.InnerText))
+                    {
+                        var paras = cell.Descendants<Paragraph>().ToList();
+                        var bold=cell.Descendants<Bold>().ToList();
+                        if (bold.Count > 0) 
+                        { 
+                            gc.Bolded = true;
+                        }
+                        else
+                        {
+                            gc.Bolded = false;
+                        }
+                        var texts = paras.Select(x => x.InnerText).ToList();
+                        cellContent = string.Join('\n', texts);
+                    }
+                    var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
+                    var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val;
+                    var vMerge = cell.TableCellProperties?.VerticalMerge?.Val;
+                    gc.CellTxt= cellContent;
+                    gc.CellWidth=int.Parse(cellWidth);
+                    gc.HMerge = hMerge;
+                    gc.VMerge = vMerge;
+                    grow.Cells.Add(gc);
+                    columnIdx++;
+                }
+                result.Rows.Add(grow);
+                rowIdx++;
+            }
+            action.Invoke(JsonSerializer.Serialize(result));
+            return Task.FromResult(result);
+        }
         public Task<List<ReportRow>> ParseRows(MainDocumentPart main,int fromTableIdx, int toTableIdx,Action<String> action=null)
         {
             var tables=main.Document.Body?.Descendants<Table>().Take(new Range(fromTableIdx, toTableIdx)).ToList();

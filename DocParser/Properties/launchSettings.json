@@ -2,7 +2,7 @@
   "profiles": {
     "DocParser": {
       "commandName": "Project",
-      "commandLineArgs": "verdicts"
+      "commandLineArgs": "Measurements"
     }
   }
 }

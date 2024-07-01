@@ -36,9 +36,10 @@ namespace DocParser
                         //report rows collect
                         var reportRows = rows.ParseRows(doc.MainDocumentPart, 4, 9, action => Console.WriteLine(action));
                         break;
-                    case "Components":
+                    case "components":
                         break;
                     case "Measurements":
+                        var grows = await rows.ParseGeneralRows(doc.MainDocumentPart, 10,action=>Console.WriteLine(action));
                         break;
                     case "Clear":
                         Console.Clear();
