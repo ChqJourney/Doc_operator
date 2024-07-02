@@ -12,10 +12,7 @@ namespace DocParser
 #else
             string templatePath = args[0];
             
-            foreach (string arg in args) 
-            {
-                Console.WriteLine(arg);
-            }
+            
 #endif
             var fieldsParser = new Fields();
             var rows = new Rows();
@@ -33,13 +30,39 @@ namespace DocParser
                         var fields = fieldsParser.CollectFields(doc.MainDocumentPart, action => Console.WriteLine(action));
                         break;
                     case "verdicts":
-                        //report rows collect
+                        //compliance rows collect
+#if DEBUG
                         var reportRows = rows.ParseRows(doc.MainDocumentPart, 4, 9, action => Console.WriteLine(action));
+#else
+                        var startTableIdx=int.Parse(args[2]);
+                        var endTableIdx=int.Parse(args[3]);
+                        var reportRows = rows.ParseRows(doc.MainDocumentPart, startTableIdx, endTableIdx, action => Console.WriteLine(action));
+#endif
                         break;
                     case "components":
+                        //component list rows collect
+#if DEBUG
+                        var grows = await rows.ParseGeneralRows(doc.MainDocumentPart, 17, action => Console.WriteLine(action));
+#else
+                        var tableIdx = int.Parse(args[2]);
+                        var componentRows = await rows.ParseGeneralRows(doc.MainDocumentPart, tableIdx, action => Console.WriteLine(action));
+#endif
                         break;
                     case "Measurements":
-                        var grows = await rows.ParseGeneralRows(doc.MainDocumentPart, 10,action=>Console.WriteLine(action));
+                        //Measurements table rows collect
+#if DEBUG
+                        for (int i = 10; i < 14; i++)
+                        {
+                            var mRows = await rows.ParseGeneralRows(doc.MainDocumentPart, i,action=>Console.WriteLine(action));
+                        }
+#else
+                        var startIdx = int.Parse(args[2]);
+                        var endIdx = int.Parse(args[3]);
+                        for (int i = startIdx; i < endIdx; i++)
+                        {
+                            var mRows = await rows.ParseGeneralRows(doc.MainDocumentPart, i,action=>Console.WriteLine(action));
+                        }
+#endif
                         break;
                     case "Clear":
                         Console.Clear();
