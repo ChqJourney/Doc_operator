@@ -23,7 +23,10 @@ namespace DocParser
         public int ColumnIdx { get; set; }
         public string CellTxt { get; set; }
         public bool Bolded { get; set; }
+        public bool HasShading { get; set; }
         public int CellWidth { get; set; }
+        public bool IsCentered { get; set; }
+
         public string HMerge { get; set; }
         public string VMerge { get; set; }
     }
@@ -48,6 +51,8 @@ namespace DocParser
                     var gc=new GeneralCell();
                     gc.RowIdx = rowIdx;
                     gc.ColumnIdx = columnIdx;
+                    var j=cell.Descendants<Justification>().FirstOrDefault();
+
                     string cellContent = "";
                     if (!string.IsNullOrEmpty(cell.InnerText))
                     {
@@ -67,6 +72,12 @@ namespace DocParser
                     var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
                     var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val;
                     var vMerge = cell.TableCellProperties?.VerticalMerge?.Val;
+                    var hasShading=IsShadingCell(cell);
+                    if (j != null)
+                    {
+                        gc.IsCentered = j.Val == "center";
+                    }
+                    gc.HasShading = hasShading;
                     gc.CellTxt= cellContent;
                     gc.CellWidth=int.Parse(cellWidth);
                     gc.HMerge = hMerge;
@@ -166,16 +177,10 @@ namespace DocParser
             }
             return false;
         }
-        private bool IsShadingCell(TableCell cell,string shadingColor="D9D9D9")
+        private bool IsShadingCell(TableCell cell)
         {
             var shading = cell.Descendants<Shading>().FirstOrDefault();
-            if (shading?.Val!=null&&shading.Val==shadingColor)
-            {
-                
-                    return true;
-               
-            }
-            return false;
+            return shading?.Val != null;
         }
     }
     public class ReportRow

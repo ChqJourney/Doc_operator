@@ -51,7 +51,7 @@ namespace DocParser
                     case "Measurements":
                         //Measurements table rows collect
 #if DEBUG
-                        for (int i = 10; i < 14; i++)
+                        for (int i = 1; i < 14; i++)
                         {
                             var mRows = await rows.ParseGeneralRows(doc.MainDocumentPart, i,action=>Console.WriteLine(action));
                         }
