@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace DocParser
+namespace DocFiller
 {
     public class FillTable
     {
@@ -22,7 +22,7 @@ namespace DocParser
         public List<FillCell> Cells { get; set; }
 
     }
-    public class ClauseFillRow:FillRow
+    public class ClauseFillRow : FillRow
     {
         public string ClauseNo { get; set; }
         public int IdxUnderClause { get; set; }
@@ -69,8 +69,8 @@ namespace DocParser
     {
         public Task<GeneralTable> ParseGeneralRows(MainDocumentPart main, int tableIdx, Action<String> action = null)
         {
-            var table = main.Document.Body?.Descendants<Table>().ElementAt(tableIdx-1);
-            if (table == null)throw new NullReferenceException(nameof(table));
+            var table = main.Document.Body?.Descendants<Table>().ElementAt(tableIdx - 1);
+            if (table == null) throw new NullReferenceException(nameof(table));
             var result = new GeneralTable();
             var rows = table.Descendants<TableRow>().ToList();
 
@@ -78,23 +78,23 @@ namespace DocParser
             foreach (var row in rows)
             {
                 var grow = new GeneralRow();
-                
-                var cells=row.Descendants<TableCell>().ToList();
+
+                var cells = row.Descendants<TableCell>().ToList();
                 var columnIdx = 0;
                 foreach (var cell in cells)
                 {
-                    var gc=new GeneralCell();
+                    var gc = new GeneralCell();
                     gc.RowIdx = rowIdx;
                     gc.ColumnIdx = columnIdx;
-                    var j=cell.Descendants<Justification>().FirstOrDefault();
+                    var j = cell.Descendants<Justification>().FirstOrDefault();
 
                     string cellContent = "";
                     if (!string.IsNullOrEmpty(cell.InnerText))
                     {
                         var paras = cell.Descendants<Paragraph>().ToList();
-                        var bold=cell.Descendants<Bold>().ToList();
-                        if (bold.Count > 0) 
-                        { 
+                        var bold = cell.Descendants<Bold>().ToList();
+                        if (bold.Count > 0)
+                        {
                             gc.Bolded = true;
                         }
                         else
@@ -107,14 +107,14 @@ namespace DocParser
                     var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
                     var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val;
                     var vMerge = cell.TableCellProperties?.VerticalMerge?.Val;
-                    var hasShading=IsShadingCell(cell);
+                    var hasShading = IsShadingCell(cell);
                     if (j != null)
                     {
                         gc.IsCentered = j.Val == "center";
                     }
                     gc.HasShading = hasShading;
-                    gc.CellTxt= cellContent;
-                    gc.CellWidth=int.Parse(cellWidth);
+                    gc.CellTxt = cellContent;
+                    gc.CellWidth = int.Parse(cellWidth);
                     gc.HMerge = hMerge;
                     gc.VMerge = vMerge;
                     grow.Cells.Add(gc);
@@ -126,47 +126,47 @@ namespace DocParser
             action.Invoke(JsonSerializer.Serialize(result));
             return Task.FromResult(result);
         }
-        public Task<List<ReportRow>> ParseRows(MainDocumentPart main,int fromTableIdx, int toTableIdx,Action<String> action=null)
+        public Task<List<ReportRow>> ParseRows(MainDocumentPart main, int fromTableIdx, int toTableIdx, Action<String> action = null)
         {
-            var tables=main.Document.Body?.Descendants<Table>().Take(new Range(fromTableIdx, toTableIdx)).ToList();
-            if(tables==null || tables.Count == 0)
+            var tables = main.Document.Body?.Descendants<Table>().Take(new Range(fromTableIdx, toTableIdx)).ToList();
+            if (tables == null || tables.Count == 0)
             {
                 return Task.FromResult(new List<ReportRow>());
             }
-            var resultList=new List<ReportRow>();
-            foreach (var table in tables) 
+            var resultList = new List<ReportRow>();
+            foreach (var table in tables)
             {
-                var rows=table.Descendants<TableRow>().ToList();
+                var rows = table.Descendants<TableRow>().ToList();
                 var currentClause = "";
                 var i = 0;
-                foreach (var row in rows) 
+                foreach (var row in rows)
                 {
-                    var rowType= DectectRowType(row); 
-                    var cells=row.Descendants<TableCell>().ToList();
+                    var rowType = DectectRowType(row);
+                    var cells = row.Descendants<TableCell>().ToList();
                     if (cells.Count == 1) continue;
                     if (!string.IsNullOrEmpty(cells[0].InnerText))
                     {
                         currentClause = cells[0].InnerText;
                         i = 0;
                     }
-                    
+
                     if (cells.Count == 3)
                     {
-                        
-                        var tempRow = new ReportRow(rowType,currentClause,i, cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText);
+
+                        var tempRow = new ReportRow(rowType, currentClause, i, cells[0].InnerText, cells[1].InnerText, "", cells[2].InnerText);
                         i++;
                         resultList.Add(tempRow);
                     }
                     else
                     {
-                            string cellContent="";
+                        string cellContent = "";
                         if (!string.IsNullOrEmpty(cells[2].InnerText))
                         {
                             var paras = cells[2].Descendants<Paragraph>().ToList();
-                            var texts=paras.Select(x=>x.InnerText).ToList();
-                            cellContent=string.Join('\n',texts);
+                            var texts = paras.Select(x => x.InnerText).ToList();
+                            cellContent = string.Join('\n', texts);
                         }
-                        var tempRow = new ReportRow(rowType, currentClause,i, cells[0].InnerText, cells[1].InnerText, cellContent, cells[3].InnerText);
+                        var tempRow = new ReportRow(rowType, currentClause, i, cells[0].InnerText, cells[1].InnerText, cellContent, cells[3].InnerText);
                         i++;
                         resultList.Add(tempRow);
                     }
@@ -175,15 +175,15 @@ namespace DocParser
                         action.Invoke(JsonSerializer.Serialize(resultList.Last()));
                     }
                 }
-                
+
             }
             return Task.FromResult(resultList);
         }
         public RowType DectectRowType(TableRow row)
         {
-            var cells=row.Descendants<TableCell>().ToList();
-            if(cells.Count==1)return RowType.Unknown;
-            if (cells.Count==3)
+            var cells = row.Descendants<TableCell>().ToList();
+            if (cells.Count == 1) return RowType.Unknown;
+            if (cells.Count == 3)
             {
                 if (IsShadingCell(cells[1]))
                 {
@@ -202,11 +202,11 @@ namespace DocParser
                     return RowType.VerdictItem;
                 }
             }
-            
+
         }
         private bool IfRemarksNeeded(TableCell cell)
         {
-            if (cell.InnerText.Contains("...:")||cell.InnerText.Contains("\u2026\u2026\u2026:"))
+            if (cell.InnerText.Contains("...:") || cell.InnerText.Contains("\u2026\u2026\u2026:"))
             {
                 return true;
             }
@@ -220,7 +220,7 @@ namespace DocParser
     }
     public class ReportRow
     {
-        public ReportRow(RowType rowType,string clauseNo,int idx,string a="",string b="",string c="",string d="")
+        public ReportRow(RowType rowType, string clauseNo, int idx, string a = "", string b = "", string c = "", string d = "")
         {
             CellA = a;
             CellB = b;
@@ -240,7 +240,7 @@ namespace DocParser
         public string Remark { get; set; }
         public string Verdict { get; set; }
     }
-   
+
     public enum RowType
     {
         SectionHeader,
