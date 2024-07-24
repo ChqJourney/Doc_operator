@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValidateApp", "ValidateApp\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Docor", "Docor\Docor.csproj", "{7AEDC834-8D02-405A-82B1-29D6BC0E5150}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocParser", "DocParser\DocParser.csproj", "{39BEDEEA-A1D4-4ED9-8ACA-4446CC955711}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocParser", "DocParser\DocParser.csproj", "{39BEDEEA-A1D4-4ED9-8ACA-4446CC955711}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocFiller", "DocFiller\DocFiller.csproj", "{AA841C92-60D8-4A17-8C22-69D0FAA0304C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocFiller", "DocFiller\DocFiller.csproj", "{AA841C92-60D8-4A17-8C22-69D0FAA0304C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TableParse", "TableParse\TableParse.csproj", "{992DB8EF-6478-4055-848B-6AA729CF1F3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{AA841C92-60D8-4A17-8C22-69D0FAA0304C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA841C92-60D8-4A17-8C22-69D0FAA0304C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA841C92-60D8-4A17-8C22-69D0FAA0304C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{992DB8EF-6478-4055-848B-6AA729CF1F3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{992DB8EF-6478-4055-848B-6AA729CF1F3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{992DB8EF-6478-4055-848B-6AA729CF1F3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{992DB8EF-6478-4055-848B-6AA729CF1F3E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

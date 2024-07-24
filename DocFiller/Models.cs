@@ -9,6 +9,33 @@ using System.Threading.Tasks;
 
 namespace DocFiller
 {
+    public class Report
+    {
+        public string ReportNo { get; set; }
+        public List<GeneralField> GeneralFields { get; set; }
+
+        public List<FillTable> Tables { get; set; }
+        public List<PhotoBlock> PhotoBlocks { get; set; }
+    }
+    public class GeneralField 
+    {
+        public int CommentId { get; set; }
+        public FieldEdit Edit { get; set; }
+    }
+    public class FieldEdit
+    {
+        public string InputType { get; set; }
+        public string InputValue { get; set; }
+        public string OutputType { get; set; }
+        public string AlignType { get; set; }
+        public List<string> Hints { get; set; }
+        public List<string> RulesBasedOnInput { get; set; }
+    }
+    public class PhotoBlock
+    {
+
+    }
+
     public class FillTable
     {
         public int TableIdx { get; set; }
@@ -31,15 +58,18 @@ namespace DocFiller
     {
         public int ColumnIdx { get; set; }
         public string OriginalText { get; set; }
-        public List<Edit> Edits { get; set; }
+        public List<CellEdit> Edits { get; set; }
 
     }
-    public class Edit
+    public class CellEdit
     {
+        public string InputValue { get; set; }
+        // js type
         public string InputType { get; set; }
+        // c# type
         public string OutputType { get; set; }
         public string InsertType { get; set; }
-        public string AlignTYpe { get; set; }
+        public string AlignType { get; set; }
         public List<string> Hints { get; set; }
         public List<string> RulesBasedOnInput { get; set; }
     }
