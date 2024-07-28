@@ -6,14 +6,7 @@ using System.Threading.Tasks;
 
 namespace TableParse
 {
-    public class Report
-    {
-        public string ReportNo { get; set; }
-        public List<GeneralField> GeneralFields { get; set; }
-
-        public List<FillTable> Tables { get; set; }
-        public List<PhotoBlock> PhotoBlocks { get; set; }
-    }
+    
     public class GeneralField
     {
         public int CommentId { get; set; }
@@ -33,10 +26,19 @@ namespace TableParse
 
     }
 
-    public class FillTable
+    public class FillTable<T> where T:FillRow
     {
         public int TableIdx { get; set; }
-        public List<FillRow> Rows { get; set; }
+        public string TableType { get; set; }
+        public string TableTitle { get; set; }
+        public List<T> Rows { get; set; }
+    }
+    public class FillComplianceTable
+    {
+        public int TableIdx { get; set; }
+        public string TableType { get; set; }
+        public string TableTitle { get; set; }
+        public List<ClauseFillRow> Rows { get; set; }
     }
     public class FillRow
     {
@@ -98,5 +100,23 @@ namespace TableParse
 
         public string HMerge { get; set; }
         public string VMerge { get; set; }
+    }
+    public enum TableType
+    {
+        Unknown,
+        General,
+        Compliance,
+        Measurement,
+        Component,
+        Equipment,
+        Photograph
+    }
+    public enum RowType
+    {
+        SectionHeader,
+        ClauseHeader,
+        VerdictItem,
+        InfoItem,
+        Unknown
     }
 }
