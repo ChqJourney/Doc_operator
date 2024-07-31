@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace TableParse
@@ -42,14 +43,19 @@ namespace TableParse
     }
     public class FillRow
     {
+        [JsonIgnore(Condition =JsonIgnoreCondition.WhenWritingDefault)]
         public bool Duplicatable { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool Deletable { get; set; }
         public int TableIdx { get; set; }
         public int RowIdx { get; set; }
         public List<FillCell> Cells { get; set; }
 
     }
+
     public class ClauseFillRow : FillRow
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string ClauseNo { get; set; }
         public int IdxUnderClause { get; set; }
     }
@@ -57,13 +63,21 @@ namespace TableParse
     {
         public int RowIdx { get; set; }
         public int ColumnIdx { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string OriginalText { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool IsCentered { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Bolded { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public int CellWidth { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string HMerge { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string VMerge { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool HasShading { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CellEdit> Edits { get; set; }
 
     }

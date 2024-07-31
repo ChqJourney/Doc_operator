@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TableParse": {
+      "commandName": "Project",
+      "commandLineArgs": "\"rows\"\r\n\"Templates/iec60598_2_1i_2022-08-26.docx\"\r\n\"\""
+    }
+  }
+}

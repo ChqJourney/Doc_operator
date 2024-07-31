@@ -1,8 +1,7 @@
-﻿using DocumentFormat.OpenXml.Drawing.Spreadsheet;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TableParse
 {
@@ -10,60 +9,71 @@ namespace TableParse
     {
         static void Main(string[] args)
         {
+            string action = args[0];
+            string templatePath = args[1];
+            var tableTypes = new List<int>();
 #if DEBUG
-            string templatePath = "Templates/iec60598_2_1i_2022-08-26.docx";
-            var tableTypes = new List<int>()
+
+
+            if (args.Length > 2 && args[2] != "")
             {
-                1,1,1,1,2,2,2,2,2,3,3,3,3,3,3,3,4,3,3,3,3,0,0
+                foreach (char c in args[2])
+                {
+                    tableTypes.Add(int.Parse(c.ToString()));
+                }
+            }
+
+            tableTypes = new List<int>()
+            {
+                1,1,1,1,2,2,2,2,2,3,3,3,3,3,3,3,4,3,3,3,3,5,5
             };
 
 #else
-            string templatePath = args[0];
-            var tableTypes = new List<int>();
-            if (args.Length > 1) 
+           
+            if (args.Length > 2 && args[2]!="") 
             {
-                foreach(char c in args[1])
+                foreach(char c in args[2])
                 {
                     tableTypes.Add(int.Parse(c.ToString()));
                 }
             }
             
 #endif
+
             using (WordprocessingDocument doc = WordprocessingDocument.Open(templatePath, true))
             {
                 var tables = doc.MainDocumentPart?.Document.Body?.Descendants<Table>().ToList();
-                if (tables == null||tables.Count==0) throw new NullReferenceException(nameof(tables));
+                if (tables == null || tables.Count == 0) throw new ArgumentNullException(nameof(tables));
+#if DEBUG
+#else
+                if (tableTypes.Count!=0&&tableTypes.Count!=tables.Count)throw new ArgumentNullException(nameof(tableTypes));
+#endif
                 var tableIdx = 0;
                 foreach (var table in tables)
                 {
-                    
-                    switch (tableTypes[tableIdx])
+
+                    switch (action)
                     {
-                        case 1:
-                        case 3:
-                        case 4:
+                        case "tables":
                             var fTable = new FillTable<FillRow>();
-                            fTable.TableType=((TableType)tableTypes[tableIdx]).ToString();
-                            ParseTable(table, fTable,tableIdx);
+                            ParseTable(table, fTable, tableIdx);
                             Console.WriteLine(JsonSerializer.Serialize(fTable));
                             break;
-                        case 2:
-                            var cTable = new FillTable<ClauseFillRow>();
-                            cTable.TableType = ((TableType)tableTypes[tableIdx]).ToString();
-                            ParseComplainceTable(table,cTable,tableIdx);
-                            Console.Write(JsonSerializer.Serialize(cTable));
+                        case "rows":
+                            ParseRows(table, tableIdx, tableTypes);
                             break;
                         default:
                             break;
                     }
-                    
+
+
                     tableIdx++;
                 }
-                
-                Environment.Exit(0); 
+
+                Environment.Exit(0);
             }
         }
-        private static void ParseTable(Table table,FillTable<FillRow> fTable,int tableIdx)
+        private static void ParseTable(Table table, FillTable<FillRow> fTable, int tableIdx)
         {
             fTable.TableIdx = tableIdx;
             var rows = table.Descendants<TableRow>().ToList();
@@ -121,42 +131,52 @@ namespace TableParse
                 fTable.Rows.Add(fRow);
             }
         }
-        
-        private static void ParseComplainceTable(Table table,FillTable<ClauseFillRow> fTable,int tableIdx)
+
+        private static void ParseRows(Table table, int tableIdx, List<int> tableTypes)
         {
-            fTable.TableIdx = tableIdx;
+
             var rows = table.Descendants<TableRow>().ToList();
-            fTable.Rows = new List<ClauseFillRow>();
-            var currentClauseNo = "";
-            var idxInClause = 0;
-            foreach(var (row,rowIdx) in rows.Select((row, index) => (row, index)))
+            var currentRowType = tableTypes.Count == 0 ? 1 : tableTypes[tableIdx];
+
+            switch (currentRowType)
             {
-                
-                var rowType= DectectRowType(row);
-                var fRow = new ClauseFillRow();
+                //general
+                case 1:
+                    parseAndEmitGeneralRows(rows, tableIdx);
+                    break;
+                //compliance
+                case 2:
+                    parseAndEmitComplianceRows(rows, tableIdx);
+                    break;
+                //measurement
+                case 3:
+                    parseAndEmitMeasurementRows(rows, tableIdx);
+                    break;
+                //component
+                case 4:
+                    parseAndEmitComponentRows(rows, tableIdx);
+                    break;
+                //equipment
+                case 5:
+                    parseAndEmitComponentRows(rows, tableIdx);
+                    break;
+                default:
+                    break;
+            }
+
+        }
+        private static void parseAndEmitGeneralRows(List<TableRow> rows, int tableIdx)
+        {
+            foreach (var (row, rowIdx) in rows.Select((row, index) => (row, index)))
+            {
+                var fRow = new FillRow();
                 fRow.TableIdx = tableIdx;
                 fRow.RowIdx = rowIdx;
                 fRow.Duplicatable = false;
-                fRow.Cells = new List<FillCell>();
                 var cells = row.Descendants<TableCell>().ToList();
-                if (!string.IsNullOrEmpty(cells[0].InnerText))
+                fRow.Cells = new List<FillCell>();
+                foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
                 {
-                    currentClauseNo = cells[0].InnerText;
-                    idxInClause = 0;
-                }
-                else
-                {
-                    idxInClause++;
-                }
-                fRow.ClauseNo = currentClauseNo;
-                fRow.IdxUnderClause = idxInClause;
-                foreach(var (cell,columnIdx) in cells.Select((cell,index) => (cell, index)))
-                {
-                    // fetch table title
-                    if(rowIdx == 0 && columnIdx == 1 && !string.IsNullOrEmpty(cell.InnerText))
-                    {
-                        fTable.TableTitle= cell.InnerText;
-                    }
                     var fCell = new FillCell();
                     fCell.ColumnIdx = columnIdx;
                     fCell.RowIdx = rowIdx;
@@ -192,11 +212,285 @@ namespace TableParse
                     fCell.HMerge = hMerge;
                     fCell.VMerge = vMerge;
                     fRow.Cells.Add(fCell);
+                    Console.WriteLine(JsonSerializer.Serialize(fRow));
                 }
-                
-                fTable.Rows.Add(fRow);
             }
-         }
+        }
+        private static void parseAndEmitComplianceRows(List<TableRow> rows, int tableIdx)
+        {
+            var currentClauseNo = "";
+            var idxInClause = 0;
+            foreach (var (row, rowIdx) in rows.Select((row, index) => (row, index)))
+            {
+                var cells = row.Descendants<TableCell>().ToList();
+                var fRow = new ClauseFillRow();
+                fRow.Cells = new List<FillCell>();
+                fRow.TableIdx = tableIdx;
+                fRow.RowIdx = rowIdx;
+                fRow.Duplicatable = false;
+                fRow.Deletable = false;
+
+                if (!string.IsNullOrEmpty(cells[0].InnerText))
+                {
+                    currentClauseNo = cells[0].InnerText;
+                    idxInClause = 0;
+                }
+                else
+                {
+                    idxInClause++;
+                }
+                fRow.ClauseNo = currentClauseNo;
+                fRow.IdxUnderClause = idxInClause;
+
+                foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
+                {
+
+                    var fCell = new FillCell();
+                    fCell.ColumnIdx = columnIdx;
+                    fCell.RowIdx = rowIdx;
+                    var j = cell.Descendants<Justification>().FirstOrDefault();
+
+                    string cellContent = "";
+                    if (!string.IsNullOrEmpty(cell.InnerText))
+                    {
+                        var paras = cell.Descendants<Paragraph>().ToList();
+                        var bold = cell.Descendants<Bold>().ToList();
+                        if (bold.Count > 0)
+                        {
+                            fCell.Bolded = true;
+                        }
+                        else
+                        {
+                            fCell.Bolded = false;
+                        }
+                        var texts = paras.Select(x => x.InnerText).ToList();
+                        cellContent = string.Join('\n', texts);
+                    }
+                    var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
+                    var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val?.ToString() ?? null;
+                    var vMerge = cell.TableCellProperties?.VerticalMerge?.Val?.ToString() ?? null;
+                    var hasShading = IsShadingCell(cell);
+                    if (j != null)
+                    {
+                        fCell.IsCentered = j.Val == "center";
+                    }
+                    fCell.HasShading = hasShading;
+                    fCell.OriginalText = cellContent;
+                    fCell.CellWidth = int.Parse(cellWidth);
+                    fCell.HMerge = hMerge;
+                    fCell.VMerge = vMerge;
+                    fRow.Cells.Add(fCell);
+                }
+
+                Console.WriteLine(JsonSerializer.Serialize(fRow));
+            }
+        }
+        private static void parseAndEmitMeasurementRows(List<TableRow> rows,int tableIdx)
+        {
+            var currentClauseNo = "";
+            var idxInClause = 0;
+            foreach (var (row, rowIdx) in rows.Select((row, index) => (row, index)))
+            {
+                var cells = row.Descendants<TableCell>().ToList();
+                var fRow = new ClauseFillRow();
+                fRow.Cells = new List<FillCell>();
+                fRow.TableIdx = tableIdx;
+                fRow.RowIdx = rowIdx;
+                fRow.Duplicatable = false;
+                fRow.Deletable = false;
+
+                if (!string.IsNullOrEmpty(cells[0].InnerText)&&rowIdx==0)
+                {
+                    currentClauseNo = cells[0].InnerText;
+                    idxInClause = 0;
+                }
+                else
+                {
+                    idxInClause++;
+                }
+                fRow.ClauseNo = currentClauseNo;
+                fRow.IdxUnderClause = idxInClause;
+
+                foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
+                {
+                    var fCell = new FillCell();
+                    fCell.ColumnIdx = columnIdx;
+                    fCell.RowIdx = rowIdx;
+                    var j = cell.Descendants<Justification>().FirstOrDefault();
+
+                    string cellContent = "";
+                    if (!string.IsNullOrEmpty(cell.InnerText))
+                    {
+                        var paras = cell.Descendants<Paragraph>().ToList();
+                        var bold = cell.Descendants<Bold>().ToList();
+                        if (bold.Count > 0)
+                        {
+                            fCell.Bolded = true;
+                        }
+                        else
+                        {
+                            fCell.Bolded = false;
+                        }
+                        var texts = paras.Select(x => x.InnerText).ToList();
+                        cellContent = string.Join('\n', texts);
+                    }
+                    var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
+                    var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val?.ToString() ?? null;
+                    var vMerge = cell.TableCellProperties?.VerticalMerge?.Val?.ToString() ?? null;
+                    var hasShading = IsShadingCell(cell);
+                    if (j != null)
+                    {
+                        fCell.IsCentered = j.Val == "center";
+                    }
+                    fCell.HasShading = hasShading;
+                    fCell.OriginalText = cellContent;
+                    fCell.CellWidth = int.Parse(cellWidth);
+                    fCell.HMerge = hMerge;
+                    fCell.VMerge = vMerge;
+                    fRow.Cells.Add(fCell);
+                }
+
+                Console.WriteLine(JsonSerializer.Serialize(fRow));
+            }
+        }
+        private static void parseAndEmitComponentRows(List<TableRow> rows,int tableIdx)
+        {
+            var currentClauseNo = "";
+            var idxInClause = 0;
+            foreach (var (row, rowIdx) in rows.Select((row, index) => (row, index)))
+            {
+                if (!new int[3] { 0, 1, rows.Count - 1 }.Contains(rowIdx)) continue;
+                var cells = row.Descendants<TableCell>().ToList();
+                var fRow = new ClauseFillRow();
+                fRow.Cells = new List<FillCell>();
+                fRow.TableIdx = tableIdx;
+                fRow.RowIdx = rowIdx;
+                fRow.Duplicatable = false;
+                fRow.Deletable = false;
+
+                if (!string.IsNullOrEmpty(cells[0].InnerText) && rowIdx == 0)
+                {
+                    currentClauseNo = cells[0].InnerText;
+                    idxInClause = 0;
+                }
+                else
+                {
+                    idxInClause++;
+                }
+                fRow.ClauseNo = currentClauseNo;
+                fRow.IdxUnderClause = idxInClause;
+
+                foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
+                {
+                    var fCell = new FillCell();
+                    fCell.ColumnIdx = columnIdx;
+                    fCell.RowIdx = rowIdx;
+                    var j = cell.Descendants<Justification>().FirstOrDefault();
+
+                    string cellContent = "";
+                    if (!string.IsNullOrEmpty(cell.InnerText))
+                    {
+                        var paras = cell.Descendants<Paragraph>().ToList();
+                        var bold = cell.Descendants<Bold>().ToList();
+                        if (bold.Count > 0)
+                        {
+                            fCell.Bolded = true;
+                        }
+                        else
+                        {
+                            fCell.Bolded = false;
+                        }
+                        var texts = paras.Select(x => x.InnerText).ToList();
+                        cellContent = string.Join('\n', texts);
+                    }
+                    var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
+                    var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val?.ToString() ?? null;
+                    var vMerge = cell.TableCellProperties?.VerticalMerge?.Val?.ToString() ?? null;
+                    var hasShading = IsShadingCell(cell);
+                    if (j != null)
+                    {
+                        fCell.IsCentered = j.Val == "center";
+                    }
+                    fCell.HasShading = hasShading;
+                    fCell.OriginalText = cellContent;
+                    fCell.CellWidth = int.Parse(cellWidth);
+                    fCell.HMerge = hMerge;
+                    fCell.VMerge = vMerge;
+                    fRow.Cells.Add(fCell);
+                }
+
+                Console.WriteLine(JsonSerializer.Serialize(fRow));
+            }
+        }
+        private static void parseAndEmitEquipmentRows(List<TableRow> rows, int tableIdx)
+        {
+            var currentClauseNo = "";
+            var idxInClause = 0;
+            foreach (var (row, rowIdx) in rows.Select((row, index) => (row, index)))
+            {
+                if (!new int[2] { 0, 1}.Contains(rowIdx)) continue;
+                var cells = row.Descendants<TableCell>().ToList();
+                var fRow = new ClauseFillRow();
+                fRow.Cells = new List<FillCell>();
+                fRow.TableIdx = tableIdx;
+                fRow.RowIdx = rowIdx;
+                fRow.Duplicatable = false;
+                fRow.Deletable = false;
+
+                if (!string.IsNullOrEmpty(cells[0].InnerText) && rowIdx == 0)
+                {
+                    currentClauseNo = cells[0].InnerText;
+                    idxInClause = 0;
+                }
+                else
+                {
+                    idxInClause++;
+                }
+                fRow.ClauseNo = currentClauseNo;
+                fRow.IdxUnderClause = idxInClause;
+
+                foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
+                {
+                    var fCell = new FillCell();
+                    fCell.ColumnIdx = columnIdx;
+                    fCell.RowIdx = rowIdx;
+                    var j = cell.Descendants<Justification>().FirstOrDefault();
+
+                    string cellContent = "";
+                    if (!string.IsNullOrEmpty(cell.InnerText))
+                    {
+                        var paras = cell.Descendants<Paragraph>().ToList();
+                        var bold = cell.Descendants<Bold>().ToList();
+                        if (bold.Count > 0)
+                        {
+                            fCell.Bolded = true;
+                        }
+                        else
+                        {
+                            fCell.Bolded = false;
+                        }
+                        var texts = paras.Select(x => x.InnerText).ToList();
+                        cellContent = string.Join('\n', texts);
+                    }
+                    var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
+                    var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val?.ToString() ?? null;
+                    var vMerge = cell.TableCellProperties?.VerticalMerge?.Val?.ToString() ?? null;
+                    var hasShading = IsShadingCell(cell);
+                    if (j != null)
+                    {
+                        fCell.IsCentered = j.Val == "center";
+                    }
+                    fCell.HasShading = hasShading;
+                    fCell.OriginalText = cellContent;
+                    fCell.CellWidth = int.Parse(cellWidth);
+                    fCell.HMerge = hMerge;
+                    fCell.VMerge = vMerge;
+                    fRow.Cells.Add(fCell);
+                }
+
+                Console.WriteLine(JsonSerializer.Serialize(fRow));
+            }
+        }
         private static bool IsShadingCell(TableCell cell)
         {
             var shading = cell.Descendants<Shading>().FirstOrDefault();
@@ -226,6 +520,25 @@ namespace TableParse
                 }
             }
 
+        }
+    }
+    public class IgnoreEmptyStringConverter : JsonConverter<string>
+    {
+        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return reader.GetString();
+        }
+
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                writer.WriteNullValue();
+            }
+            else
+            {
+                writer.WriteStringValue(value);
+            }
         }
     }
 }
