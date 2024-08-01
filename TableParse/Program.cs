@@ -212,8 +212,8 @@ namespace TableParse
                     fCell.HMerge = hMerge;
                     fCell.VMerge = vMerge;
                     fRow.Cells.Add(fCell);
-                    Console.WriteLine(JsonSerializer.Serialize(fRow));
                 }
+                Console.WriteLine(JsonSerializer.Serialize(fRow));
             }
         }
         private static void parseAndEmitComplianceRows(List<TableRow> rows, int tableIdx)
