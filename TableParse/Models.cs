@@ -30,14 +30,14 @@ namespace TableParse
     public class FillTable<T> where T:FillRow
     {
         public int TableIdx { get; set; }
-        public string TableType { get; set; }
+        public TableType TableType { get; set; }
         public string TableTitle { get; set; }
         public List<T> Rows { get; set; }
     }
     public class FillComplianceTable
     {
         public int TableIdx { get; set; }
-        public string TableType { get; set; }
+        public TableType TableType { get; set; }
         public string TableTitle { get; set; }
         public List<ClauseFillRow> Rows { get; set; }
     }
@@ -47,6 +47,8 @@ namespace TableParse
         public bool Duplicatable { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public bool Deletable { get; set; }
+        public TableType TableType { get; set; }
+        public RowType RowType { get; set; }
         public int TableIdx { get; set; }
         public int RowIdx { get; set; }
         public List<FillCell> Cells { get; set; }
@@ -58,6 +60,7 @@ namespace TableParse
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string ClauseNo { get; set; }
         public int IdxUnderClause { get; set; }
+        public string ClauseTitle { get; set; }
     }
     public class FillCell
     {

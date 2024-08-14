@@ -12,10 +12,31 @@ namespace DocFiller
     public class Report
     {
         public string ReportNo { get; set; }
-        public List<GeneralField> GeneralFields { get; set; }
+        public string TrfPath { get; set; }
+        public List<CellEdit> CellEdits { get; set; }
+        public List<RowEdit> RowEdits { get; set; }
+        public List<TableEdit> TableEdits { get; set; }
+        public List<Append> Appends { get; set; }
 
-        public List<FillTable> Tables { get; set; }
-        public List<PhotoBlock> PhotoBlocks { get; set; }
+    }
+    public class RowEdit
+    {
+        public int TableIdx { get; set; }
+        public int RowIdx { get; set; }
+        public string EditType { get; set; } //delete of duplicate after
+    }
+    public class TableEdit
+    {
+        public int TableIdx { get; set; }
+        public string EditType { get; set; } //delete or duplicate after
+    }
+    public class Append
+    {
+        public string TemplatePath { get; set; }
+        public List<CellEdit> CellEdits { get; set; }
+        public List<RowEdit> RowEdits { get; set; }
+        public List<Append> Appends { get; set; }
+
     }
     public class GeneralField 
     {
@@ -24,9 +45,9 @@ namespace DocFiller
     }
     public class FieldEdit
     {
-        public string InputType { get; set; }
         public string InputValue { get; set; }
-        public string OutputType { get; set; }
+        public string TargetType { get; set; }//text,checkbox,textbox,photo
+        public string EditType { get; set; }//replace,append,before
         public string AlignType { get; set; }
         public List<string> Hints { get; set; }
         public List<string> RulesBasedOnInput { get; set; }
@@ -58,16 +79,17 @@ namespace DocFiller
     {
         public int ColumnIdx { get; set; }
         public string OriginalText { get; set; }
-        public List<CellEdit> Edits { get; set; }
+        public List<CellEdit> CellEdits { get; set; }
 
     }
     public class CellEdit
     {
+        public int TableIdx { get; set; }
+        public int RowIdx { get; set; }
+        public int ColumnIdx { get; set; }
         public string InputValue { get; set; }
         // js type
-        public string InputType { get; set; }
-        // c# type
-        public string OutputType { get; set; }
+        public string TargetType { get; set; }
         public string InsertType { get; set; }
         public string AlignType { get; set; }
         public List<string> Hints { get; set; }

@@ -39,8 +39,8 @@ namespace TableParse
             }
             
 #endif
-
-            using (WordprocessingDocument doc = WordprocessingDocument.Open(templatePath, true))
+            var path=Path.Combine(Environment.CurrentDirectory,templatePath);
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, true))
             {
                 var tables = doc.MainDocumentPart?.Document.Body?.Descendants<Table>().ToList();
                 if (tables == null || tables.Count == 0) throw new ArgumentNullException(nameof(tables));
@@ -171,6 +171,7 @@ namespace TableParse
             {
                 var fRow = new FillRow();
                 fRow.TableIdx = tableIdx;
+                fRow.TableType = TableType.General;
                 fRow.RowIdx = rowIdx;
                 fRow.Duplicatable = false;
                 var cells = row.Descendants<TableCell>().ToList();
@@ -201,12 +202,12 @@ namespace TableParse
                     var cellWidth = cell.TableCellProperties?.TableCellWidth?.Width?.Value;
                     var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val;
                     var vMerge = cell.TableCellProperties?.VerticalMerge?.Val;
-                    var hasShading = IsShadingCell(cell);
+                    //var hasShading = IsShadingCell(cell);
                     if (j != null)
                     {
                         fCell.IsCentered = j.Val == "center";
                     }
-                    fCell.HasShading = hasShading;
+                    //fCell.HasShading = hasShading;
                     fCell.OriginalText = cellContent;
                     fCell.CellWidth = int.Parse(cellWidth);
                     fCell.HMerge = hMerge;
@@ -226,10 +227,11 @@ namespace TableParse
                 var fRow = new ClauseFillRow();
                 fRow.Cells = new List<FillCell>();
                 fRow.TableIdx = tableIdx;
+                fRow.TableType = TableType.Compliance;
                 fRow.RowIdx = rowIdx;
                 fRow.Duplicatable = false;
                 fRow.Deletable = false;
-
+                fRow.RowType = DectectRowType(row);
                 if (!string.IsNullOrEmpty(cells[0].InnerText))
                 {
                     currentClauseNo = cells[0].InnerText;
@@ -241,6 +243,10 @@ namespace TableParse
                 }
                 fRow.ClauseNo = currentClauseNo;
                 fRow.IdxUnderClause = idxInClause;
+                if (idxInClause == 0)
+                {
+                    fRow.ClauseTitle = cells[1].InnerText;
+                }
 
                 foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
                 {
@@ -293,12 +299,12 @@ namespace TableParse
             {
                 var cells = row.Descendants<TableCell>().ToList();
                 var fRow = new ClauseFillRow();
+                fRow.TableType=TableType.Measurement;
                 fRow.Cells = new List<FillCell>();
                 fRow.TableIdx = tableIdx;
                 fRow.RowIdx = rowIdx;
                 fRow.Duplicatable = false;
                 fRow.Deletable = false;
-
                 if (!string.IsNullOrEmpty(cells[0].InnerText)&&rowIdx==0)
                 {
                     currentClauseNo = cells[0].InnerText;
@@ -310,6 +316,10 @@ namespace TableParse
                 }
                 fRow.ClauseNo = currentClauseNo;
                 fRow.IdxUnderClause = idxInClause;
+                if (idxInClause == 0)
+                {
+                    fRow.ClauseTitle = cells[1].InnerText;
+                }
 
                 foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
                 {
@@ -363,11 +373,11 @@ namespace TableParse
                 var cells = row.Descendants<TableCell>().ToList();
                 var fRow = new ClauseFillRow();
                 fRow.Cells = new List<FillCell>();
+                fRow.TableType = TableType.Component;
                 fRow.TableIdx = tableIdx;
                 fRow.RowIdx = rowIdx;
                 fRow.Duplicatable = false;
                 fRow.Deletable = false;
-
                 if (!string.IsNullOrEmpty(cells[0].InnerText) && rowIdx == 0)
                 {
                     currentClauseNo = cells[0].InnerText;
@@ -431,12 +441,12 @@ namespace TableParse
                 if (!new int[2] { 0, 1}.Contains(rowIdx)) continue;
                 var cells = row.Descendants<TableCell>().ToList();
                 var fRow = new ClauseFillRow();
+                fRow.TableType = TableType.Equipment;
                 fRow.Cells = new List<FillCell>();
                 fRow.TableIdx = tableIdx;
                 fRow.RowIdx = rowIdx;
                 fRow.Duplicatable = false;
                 fRow.Deletable = false;
-
                 if (!string.IsNullOrEmpty(cells[0].InnerText) && rowIdx == 0)
                 {
                     currentClauseNo = cells[0].InnerText;
@@ -494,7 +504,7 @@ namespace TableParse
         private static bool IsShadingCell(TableCell cell)
         {
             var shading = cell.Descendants<Shading>().FirstOrDefault();
-            return shading?.Val != null;
+            return shading != null && shading.Fill?.Value!="auto";
         }
         private static RowType DectectRowType(TableRow row)
         {
