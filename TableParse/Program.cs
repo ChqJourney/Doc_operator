@@ -43,6 +43,7 @@ namespace TableParse
             using (WordprocessingDocument doc = WordprocessingDocument.Open(path, true))
             {
                 var tables = doc.MainDocumentPart?.Document.Body?.Descendants<Table>().ToList();
+                
                 if (tables == null || tables.Count == 0) throw new ArgumentNullException(nameof(tables));
 #if DEBUG
 #else
@@ -60,7 +61,7 @@ namespace TableParse
                             Console.WriteLine(JsonSerializer.Serialize(fTable));
                             break;
                         case "rows":
-                            ParseRows(table, tableIdx, tableTypes);
+                            ParseRows(table, tableIdx, tableTypes,doc.MainDocumentPart);
                             break;
                         default:
                             break;
@@ -132,7 +133,7 @@ namespace TableParse
             }
         }
 
-        private static void ParseRows(Table table, int tableIdx, List<int> tableTypes)
+        private static void ParseRows(Table table, int tableIdx, List<int> tableTypes,MainDocumentPart main)
         {
 
             var rows = table.Descendants<TableRow>().ToList();
@@ -142,7 +143,7 @@ namespace TableParse
             {
                 //general
                 case 1:
-                    parseAndEmitGeneralRows(rows, tableIdx);
+                    parseAndEmitGeneralRows(rows, tableIdx,main);
                     break;
                 //compliance
                 case 2:
@@ -165,7 +166,7 @@ namespace TableParse
             }
 
         }
-        private static void parseAndEmitGeneralRows(List<TableRow> rows, int tableIdx)
+        private static void parseAndEmitGeneralRows(List<TableRow> rows, int tableIdx,MainDocumentPart main)
         {
             foreach (var (row, rowIdx) in rows.Select((row, index) => (row, index)))
             {
@@ -181,7 +182,7 @@ namespace TableParse
                     var fCell = new FillCell();
                     fCell.ColumnIdx = columnIdx;
                     fCell.RowIdx = rowIdx;
-                    var j = cell.Descendants<Justification>().FirstOrDefault();
+                    
 
                     string cellContent = "";
                     if (!string.IsNullOrEmpty(cell.InnerText))
@@ -203,9 +204,21 @@ namespace TableParse
                     var hMerge = cell.TableCellProperties?.HorizontalMerge?.Val;
                     var vMerge = cell.TableCellProperties?.VerticalMerge?.Val;
                     //var hasShading = IsShadingCell(cell);
+                    var j = cell.Descendants<Justification>().FirstOrDefault();
                     if (j != null)
                     {
                         fCell.IsCentered = j.Val == "center";
+                    }
+                    var pStyle=cell.Descendants<ParagraphStyleId>().FirstOrDefault();
+                    if (pStyle != null)
+                    {
+                        var pStyles = main.StyleDefinitionsPart.Styles.Descendants<Style>().ToList();
+                        var st=pStyles.Where(p => p.StyleId == pStyle.Val).SingleOrDefault();
+                        var jj = st.Descendants<Justification>().SingleOrDefault();
+                        if (jj != null)
+                        {
+                            fCell.IsCentered = jj.Val == "center";
+                        }
                     }
                     //fCell.HasShading = hasShading;
                     fCell.OriginalText = cellContent;
@@ -232,6 +245,9 @@ namespace TableParse
                 fRow.Duplicatable = false;
                 fRow.Deletable = false;
                 fRow.RowType = DectectRowType(row);
+                if (cells.Count > 1)
+                {
+
                 if (!string.IsNullOrEmpty(cells[0].InnerText))
                 {
                     currentClauseNo = cells[0].InnerText;
@@ -246,6 +262,7 @@ namespace TableParse
                 if (idxInClause == 0)
                 {
                     fRow.ClauseTitle = cells[1].InnerText;
+                }
                 }
 
                 foreach (var (cell, columnIdx) in cells.Select((cell, index) => (cell, index)))
@@ -518,7 +535,7 @@ namespace TableParse
                 }
                 return RowType.ClauseHeader;
             }
-            else
+            else if(cells.Count==4)
             {
                 if (IsShadingCell(cells[3]))
                 {
@@ -528,6 +545,10 @@ namespace TableParse
                 {
                     return RowType.VerdictItem;
                 }
+            }
+            else
+            {
+                return RowType.Unknown;
             }
 
         }
